@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string.h>
 #include "escolha.h"
+#include <ctype.h>
 
 using namespace std;
 
@@ -17,15 +18,13 @@ class Resposta {
         int qtdeRespostas;
 
     public:
-        Resposta () {
-
-        };
-
+        Resposta () { };
+        virtual ~Resposta() { };
         /* 
             Métodos Abstratos
          */
-        virtual char** getResposta () { }; 
-        virtual int getQtde () { };
+        virtual char** getResposta () { return NULL; }; 
+        virtual int getQtde () { return 0; };
         virtual void setQtde () { };
         virtual void consultaResposta () { };
 
@@ -63,6 +62,48 @@ class Multiplaescolha: public Resposta {
     public:
         Multiplaescolha () {
             // Contructor
+            char qtde[100];
+            int qt;
+
+            do {
+                cout << "Informe a quantidade de escolhas: ";
+                scanf(" %s", qtde);
+                fflush(stdin);
+                qt = atoi(qtde);
+                if (qt == 0) 
+                    cout << "Valor inválido";
+            } while (qt == 0);
+
+            int i = 0;
+            char op[200];
+            while (i < qt) {
+                cout << "Informe a" << i+1 << "ª escolha\n\t";
+                scanf(" %s", op);
+                fflush(stdin);
+                addEscolha(op);
+
+                ++i;
+            }
+
+            char OP[100];
+            i = 0;
+            cout << "Defina a Escolha certa:";
+            while (i < qt) {
+                cout << "(" << i+1 << ") " << this->textosEscolhas[i]->getText() << endl;
+                ++i;
+            }
+            int opcao;
+            do {
+                cout << "Opção: ";
+                scanf(" %s", OP);
+                fflush(stdin);
+                opcao = atoi(OP);
+                if (opcao <= 0 || opcao > qt)
+                    cout << "Opção inválida" << endl;
+            } while (opcao == 0 || opcao > qt);
+
+            setResposta(opcao-1);
+
         };
         virtual ~Multiplaescolha () {
             // Desconstructor
@@ -119,7 +160,7 @@ class Multiplaescolha: public Resposta {
             setQtde(this->qtdeOpcoes - 1);            
         };
         virtual void consultaResposta () {
-            cout << this->textosEscolhas[this->respostaIndex]->getText << endl;
+            cout << this->textosEscolhas[this->respostaIndex]->getText() << endl;
         };
 
 };
@@ -133,6 +174,38 @@ class TrueFalse: public Resposta {
         
         TrueFalse () {
             // Contructor
+            char qtde[100];
+            int qt;
+            do {   
+                cout << "\n\t\t\t\tinforme a quatidade de Opções:";
+                scanf(" %s", qtde);
+                fflush(stdin);
+                qt = atoi(qtde);
+            } while (qt == 0);
+
+            char escolha[200];
+            char valor[20];
+            int i = 0;
+            while (i < qt) {
+                cout << i+1 << "ª Escolha: ";
+                scanf(" %s", escolha);
+                fflush(stdin);
+
+                do {
+                    cout << i+1 << "ª Valor (V ou F): ";
+                    scanf(" %s", valor);
+                    fflush(stdin);
+                    valor[1] = '\0';
+                    valor[0] = toupper(valor[0]);
+                    if (valor[0] != 'V' && valor[0] != 'F') {
+                        cout << "O valor que foi inserido é inválido" << endl;
+                    }
+                } while (strcmp(valor, "V") != 0 && strcmp(valor, "F") != 0);
+
+                addResposta(escolha, valor[0]);
+                ++i;
+            }
+
         };
         virtual ~TrueFalse () {
             // descontructor
@@ -179,6 +252,7 @@ class TrueFalse: public Resposta {
                 this->dicionario[i] = Aux[i];
                 ++i;
             }
+            this->dicionario[ this->qtdeOpcoes ] = (Dict*) malloc (sizeof(Dict));
             
             this->dicionario[ this->qtdeOpcoes ]->resposta = TF;
             strcpy (this->dicionario[ this->qtdeOpcoes ]->texto, texto);
@@ -227,9 +301,15 @@ class QuestaoAberta: public Resposta {
     public:
 
 
-        QuestaoAberta () {
-            cout << "hello" << endl;
+        QuestaoAberta () { 
+            char questao[500];
+            cout << "Informe a resposta para esta questão:\n\t";
+            scanf(" %s", questao);
+
+            setResposta(questao);
+
         };
+        virtual ~QuestaoAberta () { };
 
         virtual void setQtde (int qtde) {
             // qtde é constante = 1
@@ -237,6 +317,7 @@ class QuestaoAberta: public Resposta {
 
         virtual char** getResposta () {
             char** novo = (char**) malloc(sizeof(char*));
+            novo[0] = (char*) calloc (500, sizeof(char));
             strcpy(novo[0], this->resposta);
             return novo;
         };
